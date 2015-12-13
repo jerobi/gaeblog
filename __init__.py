@@ -14,3 +14,51 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+import os
+import webapp2
+import jinja2
+import logging
+import json
+import base64
+
+class GAEB(object):
+
+    # in order for GAEB to render templates in a style appropriate to the website
+    # the caller should initialize with a jinja environment
+    # and a base template that would contain css to style controls
+    def __init__(self, jinja, base):
+        self.base = base
+        self.jinja = jinja
+        pass
+    
+    # example of an admin class in GAE main.py to call admin
+    # import os
+    # import webapp2
+    # import jinja2
+    # import gaeblog
+
+    # JINJA_ENVIRONMENT = jinja2.Environment(
+    #     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
+    #     extensions=['jinja2.ext.autoescape'],
+    #     autoescape=True)
+ 
+    #
+    # class AdminHandler(MainHandler):
+    #     @basicauth('admin:admin')
+    #     def get(self):
+    #         gaeb = gaeblog.GAEB(JINJA_ENVIRONMENT, 'templates/base.html')
+    #         self.response.write(gaeb.admin())
+    #
+    # app = webapp2.WSGIApplication([
+    #     ('/', MainHandler),
+    #     ('/admin', AdminHandler)
+    # ], debug=True)
+
+    def admin(self):
+        template = self.jinja.get_template('gaeblog/templates/admin.html')
+        return template.render({
+                'base': self.base
+                })
+    
+
