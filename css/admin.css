@@ -1,0 +1,78 @@
+.gaeb-edit {
+    border: 1px solid #eee;
+    background-color: #fff;
+    max-width: 400px;
+    margin-right: auto;
+}
+
+#ql-editor-1 {
+    min-height: 400px;
+}
+
+#gaeb-toolbar {
+    border-bottom: 1px solid #eee;
+    padding: 5px;
+}
+
+.gaeb-saved {
+    float: right;
+    display: inline-block;
+    width: 200px;
+    padding-left: 10px;
+}
+
+.gaeb-post {
+    display: block;
+    padding: 10px 0px 0px 10px;
+}
+
+.gaeb-date {
+    display: block;
+}
+
+.gaeb-name {
+    display: block;
+}
+
+#gaeb-submit {
+    float: right;
+}
+
+#gaeb-title {
+    width: 50%;
+    border: 0px;
+    font-size: 18px;
+    padding: 5px;
+}
+
+#gaeb-error {
+    background-color: #FF7E79;
+    color: #000;
+    padding: 5px 10px;
+    display:none;
+}
+
+#gaeb-published {
+    width: 50%;
+    border: 0px;
+    font-size: 14px;
+    padding: 5px;
+    color: #999;
+}
+
+.gaeb-fli {
+    float: left;
+    width: 200px;
+    padding-right: 10px;
+}
+
+.gaeb-fri {
+    float: right;
+    width: 200px;
+    padding-left: 10px;
+}
+
+.gaeb-editpanel {
+    padding: 5px;
+    border-bottom: 1px solid #eee;
+}

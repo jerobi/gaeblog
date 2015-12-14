@@ -20,21 +20,22 @@ GAEBAdmin.showPosts = function() {
         var post = GAEBAdmin._posts[i];
         markup.push(
             TAG('a',
-                { 'class':'post',
+                { 'class':'gaeb-post',
                   'href':'#',
                   'onclick':"return GAEBAdmin.editForm('"+post.key+"');"
                 },
-                SPAN({ 'class':'postpic',
-                       'style':"background-image:url('"+post.cover.url+"');"
-                     }) +
-                SPAN({ 'class':'aname' },
+                SPAN({ 'class':'gaeb-aname' },
                      post.title
-                    )
+                    ) 
+                +
+                SPAN({ 'class':'gaeb-date' },
+                     post.published
+                    ) 
                ) 
         );
     }
 
-    $('#posts').html(markup.join(''));
+    $('#gaeb-posts').html(markup.join(''));
 };
 
 GAEBAdmin.editForm = function(key) {
@@ -44,85 +45,85 @@ GAEBAdmin.editForm = function(key) {
             console.warn(post);
             GAEBAdmin._editKey = key;
             // vitals
-            $('#title').val(post.title);
-            $('#content').val(post.content);
-            $('#published').val(animal.pubdate);
+            $('#gaeb-title').val(post.title);
+            $('#gaeb-published').val(post.published);
+            // update the editor
+            GAEBAdmin._editor.setHTML(post.content);
+            
             //photos
-            GAEBAdmin._photos = [];
-            addPhoto(animal.cover.key, animal.cover.url)
+            //GAEBAdmin._photos = [];
+            //addPhoto(animal.cover.key, animal.cover.url)
             break;
         }
     }
 };
 
 GAEBAdmin.disableForm = function(message) {
-    $('#error').html('');
-    $('#adder').val(message);
-    $('#adder').attr('disabled','disabled');
+    GAEBAdmin.errorClear();
 };
 
 GAEBAdmin.enableForm = function() {
-    $('#adder').val("SAVE");
-    $('#clearer').val("NEW");
-    $('#adder').attr('disabled',null);
+    
 };
 
 GAEBAdmin.clearForm = function() {
     $('input').val('');
-    $('#content').val('');
-    $('#animg').html('');
+    GAEBAdmin._editor.setHTML('');
     GAEBAdmin._editKey = "";
-    GAEBAdmin._photos = [];
+    //GAEBAdmin._photos = [];
     GAEBAdmin.enableForm();
 };
 
+GAEBAdmin.error = function(message) {
+    $('#gaeb-error').html(message);
+    $('#gaeb-error').fadeIn();
+};
 
-GAEBAdmin.addAngus = function() {
-    var pics = [];
-    var cover = '';
+GAEBAdmin.errorClear = function() {
+    $('#gaeb-error').html('');
+    $('#gaeb-error').fadeOut();
+};
+
+GAEBAdmin.submitPost = function() {
+    var title = $('#gaeb-title').val();
+    var published = $('#gaeb-published').val()
+    var content = GAEBAdmin._editor.getHTML();
     
     // prevent multiple clicks
     GAEBAdmin.disableForm();
 
+    
+    console.warn(title);
+    console.warn(content);
+    console.warn(published);
+
     // validate form
-    if ($('#name').val() == '') {
-        $('#error').html('please add a name');
+    if (title == '') {
+        GAEBAdmin.error('Please add a title');
         return GAEBAdmin.enableForm();
     }
+    /*
     if (GAEBAdmin._photos.length == 0) {
         $('#error').html('please add a photo');
         return GAEBAdmin.enableForm();
     }
-    if ($('#birthdate').val() == '') {
-        $('#error').html('please add birthdate');
-        return GAEBAdmin.enableForm();
-    }
-    if ($('#birthweight').val() == '') {
-        $('#error').html('please add birthweight');
+    */
+    if (published == '') {
+        GAEBAdmin.error('Please add a Title');
         return GAEBAdmin.enableForm();
     }
 
-    for (var i = 0; i < GAEBAdmin._photos.length; i++) {
-        pics.push(GAEBAdmin._photos[i].key);
-        cover = GAEBAdmin._photos[i].key;
-    }
-
-    $.post('/animals/angus',
+    $.post('/posts',
            {
-               'key':GAEBAdmin._editKey,
-               'pics':pics.join(','),
-               'cover':cover,
-               'name':$('#name').val(),
-               'description':$('#description').val(),
-               'number':$('#number').val(),
-               'birthdate':$('#birthdate').val(),
-               'birthweight':$('#birthweight').val(),
-               'stats':GAEBAdmin.makeStats(),
-               'lineage':GAEBAdmin.makeLineage()
+               'key'        : GAEBAdmin._editKey,
+               // 'cover':cover,
+               'title'      : title,
+               'content'    : content,
+               'published'  : published,
            },
            function(response) {
-               GAEBAdmin.addAnimal(response.data);
-               GAEBAdmin.showAnimals();
+               GAEBAdmin.addPost(response.data);
+               GAEBAdmin.showPosts();
                GAEBAdmin.clearForm();
            });
 
@@ -139,43 +140,74 @@ GAEBAdmin.addPost = function(post) {
         }
     }
     // otherwise add it
-    GAEBAdmin._posts.push(animal);
+    GAEBAdmin._posts.push(post);
 }
 
 GAEBAdmin.getPosts = function() {
     $.get('/posts', 
           {},
           function(response) {
-              console.warn(response);
+              GAEBAdmin.response = response;
+              console.warn(response.status);
               GAEBAdmin._posts = response.data;
+              console.warn(GAEBAdmin._posts);
               GAEBAdmin.showPosts();
           });
 };
 
+GAEBAdmin.imageToggle = function() {
+    $('#gaeb-video-block').hide();
+    $('#gaeb-image-block').fadeToggle();
+};
+
+GAEBAdmin.videoToggle = function() {
+    $('#gaeb-image-block').hide();
+    $('#gaeb-video-block').fadeToggle();
+};
+
 function addPhoto(photo_key, photo_url) {
-    GAEBAdmin._photos.push({'key':photo_key, 'url':photo_url});
-    GAEBAdmin.showPhotos();
+    console.warn(photo_key, photo_url);
+    
+    // get the current cursor
+    var range = GAEBAdmin._editor.getSelection();
+    var html = GAEBAdmin._editor.getHTML();
+
+    console.warn(range);
+    console.warn(html);
+
+    // improve by saving off cursor
+    GAEBAdmin._editor.setHTML('<img src="'+photo_url+'" class="gaeb-fli"/>' + html);
+
+    /*
+    GAEBAdmin._photos = [];
+    GAEBAdmin._editor.insertText(5, 'Quill', {
+        'italic': true,
+        'fore-color': '#ffff00'
+    });
+    */
 };
 
 $(document).ready(function() {
     GAEBAdmin._posts = [];
     GAEBAdmin._photos = [];
+    
+    // for some reason the value attribute does not seem to be working
+    var d = new Date();
+    var m = d.getMonth()+1;
+    $('#gaeb-published').val(d.getFullYear() + '-' + m + '-' + d.getDate());
+
+    // hide image and video cells
+    $('#gaeb-image-block').hide();
+    $('#gaeb-video-block').hide();
+
+    GAEBAdmin._editor = new Quill('#gaeb-editor', {
+        modules: {
+            'toolbar': { container: '#gaeb-toolbar' },
+            'link-tooltip': true
+        }
+    });
+
     GAEBAdmin.clearForm();
     GAEBAdmin.getPosts();
-
-    tinymce.init({
-        selector: 'textarea',
-        height: 500,
-        plugins: [
-            'advlist autolink lists link image charmap print preview anchor',
-            'searchreplace visualblocks code fullscreen',
-            'insertdatetime media table contextmenu paste code'
-        ],
-        toolbar: 'insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image',
-        content_css: [
-            '//fast.fonts.net/cssapi/e6dc9b99-64fe-4292-ad98-6974f93cd2a2.css',
-            '//www.tinymce.com/css/codepen.min.css'
-        ]
-    });
 
 });

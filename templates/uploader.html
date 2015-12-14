@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<html>
+    <body style="margin:0px;padding:0px;">
+        <div>
+            <section>
+                <form id="form" action="{{ upload_url }}" enctype="multipart/form-data" method="post">
+                    <div><input type="file" name="img" onchange="document.getElementById('form').submit();"/></div>
+                </form>
+            </section>
+
+        </div>
+    </body>
+    <script type="text/javascript">
+     {% if photo_key %}
+     window.parent.addPhoto("{{photo_key}}","{{photo_url}}");
+     {% endif %}
+    </script>
+</html>
+{% endautoescape %}

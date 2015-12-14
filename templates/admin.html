@@ -8,16 +8,64 @@
 
 <link rel="stylesheet" type="text/css" media="all" href="gaeblog/css/admin.css"/>
 <script type="text/javascript" src="gaeblog/js/admin.js"></script>
+<script type="text/javascript" src="gaeblog/js/quill/quill.js"></script>
+
 
 {% endblock %}
 
 {% block content %}
 
-<div class="posts">
-
+<div class="gaeb-saved">
+    <span class="gaeb-sectitle">Saved Posts</span>
+    <div id="gaeb-posts"></div>
 </div>
 
-<div class="edit">
+<div class="gaeb-edit">
+
+    <!-- Get the essentials out of the way -->
+
+    <div class="gaeb-editpanel">
+        <button id="gaeb-submit" onclick="GAEBAdmin.submitPost()">Submit</button>
+
+        <div>
+            <input type="title" id="gaeb-title" placeholder="Post Title"/>
+        </div>
+
+        <div>
+            <input type="date" id="gaeb-published"/>
+        </div>
+    </div>
+
+    <!-- Error text -->
+    <div id="gaeb-error">
+
+    </div>
+
+    <!-- Create the toolbar container -->
+    <div id="gaeb-toolbar">
+        <button class="ql-bold">Bold</button>
+        <button class="ql-italic">Italic</button>
+        <button class="ql-link">Link</button>
+
+        <button class="gaeb-video" onclick="GAEBAdmin.imageToggle()">Image</button>
+        <button class="gaeb-video" onclick="GAEBAdmin.videoToggle()">Video</button>
+    </div>
+
+    <div id="gaeb-image-block" class="gaeb-editpanel">
+        <span id="uploader">
+            <iframe src="/photo/uploader" class="uploader" frameborder="0" height="20"></iframe>
+        </span>
+    </div>
+    
+    <div id="gaeb-video-block" class="gaeb-editpanel">
+        Youtube stuff goes here
+    </div>
+
+    
+    <!-- Create the editor container -->
+    <div id="gaeb-editor">
+        
+    </div>
 
 </div>
 
