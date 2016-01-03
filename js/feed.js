@@ -32,7 +32,7 @@ GAEBFeed.showPosts = function() {
 };
 
 GAEBFeed.getPosts = function() {
-    $.get('/posts', 
+    $.get('/published', 
           {},
           function(response) {
               GAEBFeed.response = response;

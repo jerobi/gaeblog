@@ -16,8 +16,6 @@
 #
 
 import os
-import webapp2
-import jinja2
 import logging
 import json
 import base64
@@ -106,8 +104,18 @@ class GAEB(object):
             'title'     : post.title,
             'key'       : post.key.urlsafe(),
             'content'   : post.content,
+            'status'    : post.status,
             'published' : post.published.strftime('%Y-%m-%d')
             }
+
+    def published_get(self, handler):
+        posts = model.Post.query(model.Post.status==model.Status.published).order(-model.Post.published).fetch(100)
+
+        handler.response.headers['Content-type'] = 'text/json'
+        handler.response.write(json.dumps({
+                    'status':0,
+                    'data': [ self._post_clean(p) for p in posts ]
+                    }))
 
     def posts_get(self, handler):
         posts = model.Post.query().order(-model.Post.published).fetch(100)
@@ -122,6 +130,7 @@ class GAEB(object):
         
         post_key = handler.request.get('key')
         published = handler.request.get('published')
+        status = handler.request.get('status',1)
 
         if post_key:
             post = model.Post().from_key(post_key)
@@ -131,6 +140,7 @@ class GAEB(object):
         post.title = handler.request.get('title')
         post.published = datetime.datetime.strptime(published, "%Y-%m-%d").date()
         post.content = handler.request.get('content')
+        post.status = int(status)
         # post.cover = handler.request.get('cover')
         # pics = handler.request.get('pics')
         post.put()

@@ -1,10 +1,15 @@
 from google.appengine.ext import ndb
 
+class Status(object):
+    saved = 1
+    published = 2
+
 class Post(ndb.Model):
     title        = ndb.StringProperty()
-    content      = ndb.StringProperty()
+    content      = ndb.TextProperty()
     cover        = ndb.StringProperty()    
     published    = ndb.DateProperty()
+    status       = ndb.IntegerProperty()
     date         = ndb.DateTimeProperty(auto_now_add=True)
 
     @classmethod

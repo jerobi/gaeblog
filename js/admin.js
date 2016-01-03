@@ -18,6 +18,12 @@ GAEBAdmin.showPosts = function() {
     
     for (var i=0; i < GAEBAdmin._posts.length; i++) {
         var post = GAEBAdmin._posts[i];
+        var status = '';
+
+        if (post.status == 1) {
+            status = 'pending';
+        }
+
         markup.push(
             TAG('a',
                 { 'class':'gaeb-post',
@@ -31,6 +37,10 @@ GAEBAdmin.showPosts = function() {
                 SPAN({ 'class':'gaeb-date' },
                      post.published
                     ) 
+                +
+                SPAN({ 'class':'gaeb-status' },
+                     status
+                    )
                ) 
         );
     }
@@ -84,18 +94,13 @@ GAEBAdmin.errorClear = function() {
     $('#gaeb-error').fadeOut();
 };
 
-GAEBAdmin.submitPost = function() {
+GAEBAdmin.submitPost = function(status) {
     var title = $('#gaeb-title').val();
     var published = $('#gaeb-published').val()
     var content = GAEBAdmin._editor.getHTML();
     
     // prevent multiple clicks
     GAEBAdmin.disableForm();
-
-    
-    console.warn(title);
-    console.warn(content);
-    console.warn(published);
 
     // validate form
     if (title == '') {
@@ -109,16 +114,17 @@ GAEBAdmin.submitPost = function() {
     }
     */
     if (published == '') {
-        GAEBAdmin.error('Please add a Title');
+        GAEBAdmin.error('Please add a published date');
         return GAEBAdmin.enableForm();
     }
 
-    $.post('/posts',
+    $.post('/admin/posts',
            {
                'key'        : GAEBAdmin._editKey,
                // 'cover':cover,
                'title'      : title,
                'content'    : content,
+               'status'     : status,
                'published'  : published,
            },
            function(response) {
@@ -144,7 +150,7 @@ GAEBAdmin.addPost = function(post) {
 }
 
 GAEBAdmin.getPosts = function() {
-    $.get('/posts', 
+    $.get('/admin/posts', 
           {},
           function(response) {
               GAEBAdmin.response = response;
