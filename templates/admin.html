@@ -25,7 +25,7 @@
     <!-- Get the essentials out of the way -->
 
     <div class="gaeb-editpanel">
-        <button id="gaeb-submit" onclick="GAEBAdmin.submitPost(1)">Save Draft</button>
+        <button id="gaeb-submit" onclick="GAEBAdmin.submitPost(1)">Draft</button>
         <button id="gaeb-submit" onclick="GAEBAdmin.submitPost(2)">Publish</button>
 
         <div>
@@ -59,7 +59,8 @@
     </div>
     
     <div id="gaeb-video-block" class="gaeb-editpanel">
-        Youtube stuff goes here
+        <input type="text" placeholder="Youtube URL" id="youtube" name="youtube"/>
+        <button class="gaeb-add" onclick="GAEBAdmin.addYoutube()">Add</button>
     </div>
 
     

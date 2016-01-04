@@ -33,7 +33,7 @@ class GAEB(object):
     # in order for GAEB to render templates in a style appropriate to the website
     # the caller should initialize with a jinja environment
     # and a base template that would contain css to style controls
-    def __init__(self, jinja, base):
+    def __init__(self, jinja=None, base=None):
         self.base = base
         self.jinja = jinja
         pass
@@ -108,14 +108,10 @@ class GAEB(object):
             'published' : post.published.strftime('%Y-%m-%d')
             }
 
-    def published_get(self, handler):
+    def published(self, handler):
         posts = model.Post.query(model.Post.status==model.Status.published).order(-model.Post.published).fetch(100)
+        return [ self._post_clean(p) for p in posts ]
 
-        handler.response.headers['Content-type'] = 'text/json'
-        handler.response.write(json.dumps({
-                    'status':0,
-                    'data': [ self._post_clean(p) for p in posts ]
-                    }))
 
     def posts_get(self, handler):
         posts = model.Post.query().order(-model.Post.published).fetch(100)

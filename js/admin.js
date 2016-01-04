@@ -66,6 +66,7 @@ GAEBAdmin.editForm = function(key) {
             break;
         }
     }
+    return false;
 };
 
 GAEBAdmin.disableForm = function(message) {
@@ -171,6 +172,26 @@ GAEBAdmin.videoToggle = function() {
     $('#gaeb-video-block').fadeToggle();
 };
 
+GAEBAdmin.addYoutube = function() {
+
+    // grab the video url from the form
+    var video_url = $('#youtube').val();
+
+    // if the user puts in the page url instead of the embed - convert it
+    var re = /v\=(\S+)/i;
+    var ma = re.exec(video_url);
+    if (ma) {
+        video_url = "https://www.youtube.com/embed/"+ma[1];
+    }
+
+    // get the current cursor
+    var range = GAEBAdmin._editor.getSelection();
+    var html = GAEBAdmin._editor.getHTML();
+
+    // improve by saving off the cursor
+    GAEBAdmin._editor.setHTML('<iframe class="gaeb-flv" src="'+video_url+'" frameborder="0" allowfullscreen></iframe>' + html);
+};
+
 function addPhoto(photo_key, photo_url) {
     console.warn(photo_key, photo_url);
     
@@ -212,6 +233,7 @@ $(document).ready(function() {
             'link-tooltip': true
         }
     });
+    //GAEBAdmin._editor.addFormat('embed', {'tag':'IFRAME'});
 
     GAEBAdmin.clearForm();
     GAEBAdmin.getPosts();

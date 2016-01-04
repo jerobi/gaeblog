@@ -6613,6 +6613,11 @@ Format = (function() {
         return node.getAttribute('href');
       }
     },
+    iframe: {
+      type: Format.types.EMBED,
+      tag: 'IFRAME',
+      attribute: 'src'
+    },
     image: {
       type: Format.types.EMBED,
       tag: 'IMG',
@@ -8375,7 +8380,8 @@ dom = _.extend(dom, {
     'VIDEO': 'VIDEO'
   },
   EMBED_TAGS: {
-    'IMG': 'IMG'
+      'IMG': 'IMG',
+      'IFRAME': 'IFRAME',
   },
   LINE_TAGS: {
     'DIV': 'DIV',
@@ -10212,7 +10218,7 @@ Quill = (function(superClass) {
   Quill.themes = [];
 
   Quill.DEFAULTS = {
-    formats: ['align', 'bold', 'italic', 'strike', 'underline', 'color', 'background', 'font', 'size', 'link', 'image', 'bullet', 'list'],
+      formats: ['align', 'bold', 'italic', 'strike', 'underline', 'color', 'background', 'font', 'size', 'link', 'image', 'iframe', 'bullet', 'list'],
     modules: {
       'keyboard': true,
       'paste-manager': true,
