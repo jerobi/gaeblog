@@ -8,7 +8,7 @@ class Post(ndb.Model):
     title        = ndb.StringProperty()
     content      = ndb.TextProperty()
     cover        = ndb.StringProperty()    
-    published    = ndb.DateProperty()
+    published    = ndb.DateTimeProperty()
     status       = ndb.IntegerProperty()
     date         = ndb.DateTimeProperty(auto_now_add=True)
 

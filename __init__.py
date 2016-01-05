@@ -49,16 +49,42 @@ class GAEB(object):
     #     extensions=['jinja2.ext.autoescape'],
     #     autoescape=True)
  
+    #        
+    # class AdminPostsHandler(MainHandler):
     #
-    # class AdminHandler(MainHandler):
-    #     @basicauth('admin:admin')
     #     def get(self):
     #         gaeb = gaeblog.GAEB(JINJA_ENVIRONMENT, 'templates/base.html')
-    #         self.response.write(gaeb.admin())
+    #         gaeb.posts_get(self)
+    #
+    #     def post(self):
+    #         gaeb = gaeblog.GAEB(JINJA_ENVIRONMENT, 'templates/base.html')
+    #         gaeb.posts_submit(self)
+    #
+    # class AdminHandler(MainHandler):
+    #     def get(self):
+    #         gaeb = gaeblog.GAEB(JINJA_ENVIRONMENT, 'templates/base.html')
+    #         gaeb.admin(self)
+    #
+    # class AdminPhotoUploaderHandler(MainHandler):
+    #     def get(self):
+    #         gaeb = gaeblog.GAEB(JINJA_ENVIRONMENT, 'templates/base.html')
+    #         gaeb.uploader(self)
+    #
+    # class AdminPhotoUploadHandler(blobstore_handlers.BlobstoreUploadHandler):
+    #
+    #    @basicauth('admin:m03yR')
+    #    def post(self):
+    #        gaeb = gaeblog.GAEB(JINJA_ENVIRONMENT, 'templates/base.html')
+    #        gaeb.uploaded(self)
+    #
     #
     # app = webapp2.WSGIApplication([
-    #     ('/', MainHandler),
-    #     ('/admin', AdminHandler)
+    #        ('/', MainHandler),
+    #        ('/([^/]+)', PostHandler),
+    #        ('/admin', AdminHandler),
+    #        ('/admin/posts', AdminPostsHandler),
+    #        ('/photo/upload', AdminPhotoUploadHandler),
+    #        ('/photo/uploader', AdminPhotoUploaderHandler),
     # ], debug=True)
 
     def admin(self, handler):
@@ -105,10 +131,40 @@ class GAEB(object):
             'key'       : post.key.urlsafe(),
             'content'   : post.content,
             'status'    : post.status,
+            'pubts'    : (post.published - datetime.datetime(1970,1,1)).total_seconds(),
             'published' : post.published.strftime('%Y-%m-%d')
             }
 
-    def published(self, handler):
+    def post(self, key):
+        post = model.Post.from_key(key)
+        return self._post_clean(post)
+
+    def next(self, pubts):
+        ref = datetime.datetime.fromtimestamp(pubts)
+        posts = model.Post.query(ndb.AND(
+                model.Post.status==model.Status.published,
+                model.Post.published>ref
+                )).order(model.Post.published).fetch(1)
+
+        if posts:
+            return self._post_clean(posts[0])
+        else:
+            return None
+
+    def prev(self, pubts):
+        ref = datetime.datetime.fromtimestamp(pubts)
+        posts = model.Post.query(ndb.AND(
+                model.Post.status==model.Status.published,
+                model.Post.published<ref
+                )).order(-model.Post.published).fetch(1)
+
+        if posts:
+            return self._post_clean(posts[0])
+        else:
+            return None
+        
+
+    def published(self):
         posts = model.Post.query(model.Post.status==model.Status.published).order(-model.Post.published).fetch(100)
         return [ self._post_clean(p) for p in posts ]
 
@@ -133,8 +189,16 @@ class GAEB(object):
         else:
             post = model.Post()
             
+        # create a datetime out of the date
+        # where the time portion is stolen from today
+        # this allows for better ordering on published
+        pub_time = datetime.datetime.strptime(published, "%Y-%m-%d")
+        now = datetime.datetime.now()
+        mid = datetime.datetime.combine(now.date(), datetime.time(0))
+        pub_time = pub_time + (now - mid)
+        post.published = pub_time
+
         post.title = handler.request.get('title')
-        post.published = datetime.datetime.strptime(published, "%Y-%m-%d").date()
         post.content = handler.request.get('content')
         post.status = int(status)
         # post.cover = handler.request.get('cover')
