@@ -33,9 +33,11 @@ class GAEB(object):
     # in order for GAEB to render templates in a style appropriate to the website
     # the caller should initialize with a jinja environment
     # and a base template that would contain css to style controls
-    def __init__(self, jinja=None, base=None):
+    # and a user object that has a properly authorized user 
+    def __init__(self, jinja=None, base=None, user=None):
         self.base = base
         self.jinja = jinja
+        self.user = user
         pass
     
     # example of an admin class in GAE main.py to call admin
@@ -53,28 +55,27 @@ class GAEB(object):
     # class AdminPostsHandler(MainHandler):
     #
     #     def get(self):
-    #         gaeb = gaeblog.GAEB(JINJA_ENVIRONMENT, 'templates/base.html')
+    #         gaeb = gaeblog.GAEB(JINJA_ENVIRONMENT, 'templates/base.html', self._user)
     #         gaeb.posts_get(self)
     #
     #     def post(self):
-    #         gaeb = gaeblog.GAEB(JINJA_ENVIRONMENT, 'templates/base.html')
+    #         gaeb = gaeblog.GAEB(JINJA_ENVIRONMENT, 'templates/base.html', self._user)
     #         gaeb.posts_submit(self)
     #
     # class AdminHandler(MainHandler):
     #     def get(self):
-    #         gaeb = gaeblog.GAEB(JINJA_ENVIRONMENT, 'templates/base.html')
+    #         gaeb = gaeblog.GAEB(JINJA_ENVIRONMENT, 'templates/base.html', self._user)
     #         gaeb.admin(self)
     #
     # class AdminPhotoUploaderHandler(MainHandler):
     #     def get(self):
-    #         gaeb = gaeblog.GAEB(JINJA_ENVIRONMENT, 'templates/base.html')
+    #         gaeb = gaeblog.GAEB(JINJA_ENVIRONMENT, 'templates/base.html', self._user)
     #         gaeb.uploader(self)
     #
     # class AdminPhotoUploadHandler(blobstore_handlers.BlobstoreUploadHandler):
     #
-    #    @basicauth('admin:m03yR')
     #    def post(self):
-    #        gaeb = gaeblog.GAEB(JINJA_ENVIRONMENT, 'templates/base.html')
+    #        gaeb = gaeblog.GAEB(JINJA_ENVIRONMENT, 'templates/base.html', self._user)
     #        gaeb.uploaded(self)
     #
     #
@@ -125,13 +126,36 @@ class GAEB(object):
             handler.redirect('/photo/uploader?error=true')
     
 
-    def _post_clean(self, post):
+    def _post_clean(self, post, category=None, tags=None, author=None):
+        post_key = post.key.urlsafe()
+
+        if category:
+            category_name = category.name
+        elif post.category_key:
+            category = model.Category.from_key(post.category_key)
+            category_name = category.name
+        else:
+            category_name = ''
+
+        if not author:
+            author = model.Author.from_key(post.author_key)
+            
+        if not tags:
+            tags = model.Map.map(post_key, model.Map.Kind.postTag, model.Tag)
+
         return {
             'title'     : post.title,
-            'key'       : post.key.urlsafe(),
+            'key'       : post_key,
+            'category'  : category_name,
+            'cover'     : post.cover,
+            'author'    : {
+                'name' : author.name,
+                'key'  : author.key.urlsafe()
+                },
+            'tags'      : [ t.name for t in tags ],
             'content'   : post.content,
             'status'    : post.status,
-            'pubts'    : (post.published - datetime.datetime(1970,1,1)).total_seconds(),
+            'pubts'     : (post.published - datetime.datetime(1970,1,1)).total_seconds(),
             'published' : post.published.strftime('%Y-%m-%d')
             }
 
@@ -164,10 +188,26 @@ class GAEB(object):
             return None
         
 
-    def published(self):
-        posts = model.Post.query(model.Post.status==model.Status.published).order(-model.Post.published).fetch(100)
-        return [ self._post_clean(p) for p in posts ]
+    def published(self, tag=None, category=None, author=None):
+        # TODO : handle post query more efficiently 
+        if tag:
+            posts = model.Map.map(tag, model.Map.Kind.tagPost, model.Post)
+        elif category:
+            posts = model.Post.query(model.Post.status==model.Status.published, model.Post.category_key==category).order(-model.Post.published).fetch(100)
+        elif author:
+            posts = model.Post.query(model.Post.status==model.Status.published, model.Post.author_key==author).order(-model.Post.published).fetch(100)
+        else:
+            posts = model.Post.query(model.Post.status==model.Status.published).order(-model.Post.published).fetch(100)
+        
+        return [ self._post_clean(p) for p in posts if p.removed==0 and p.status==model.Status.published]
 
+    def tags(self):
+        tags = model.Tag.query().fetch(100)
+        return [ (t.name, t.key.urlsafe()) for t in tags ]
+
+    def categories(self):
+        categories = model.Category.query().fetch(100)
+        return [ (c.name, c.key.urlsafe()) for c in categories ]
 
     def posts_get(self, handler):
         posts = model.Post.query().order(-model.Post.published).fetch(100)
@@ -177,6 +217,31 @@ class GAEB(object):
                     'status':0,
                     'data': [ self._post_clean(p) for p in posts ]
                     }))
+
+
+    def _ensure_category(self, category):
+        cat = model.Category.from_name_insert(category)
+        return cat
+
+    def _ensure_tags(self, tag_list, post_key):
+        tags = []
+        # first ensure that each tag exists
+        for tag in tag_list:
+            t = model.Tag.from_name_insert(tag)
+            tags.append(t)
+        tag_keys = [ t.key.urlsafe() for t in tags ]
+        # clear out old mappings
+        model.Map.clear(post_key, model.Map.Kind.postTag, model.Map.Kind.tagPost)
+        # then make sure the tags are mapped to the post
+        for tag_key in tag_keys:
+            model.Map.ensure(tag_key, post_key, model.Map.Kind.tagPost)
+            model.Map.ensure(post_key, tag_key, model.Map.Kind.postTag)
+        # and return the tags
+        return tags
+
+    def _ensure_author(self):
+        author = model.Author.from_user_insert(self.user)
+        return author
 
     def posts_submit(self, handler):
         
@@ -198,17 +263,36 @@ class GAEB(object):
         pub_time = pub_time + (now - mid)
         post.published = pub_time
 
+        # ensure category and save to post
+        cat_str = handler.request.get('category')
+        if cat_str:
+            category = self._ensure_category(cat_str)
+            post.category_key = category.key.urlsafe()
+        else:
+            category = None
+
+        # ensure author and save to post
+        author = self._ensure_author()
+        post.author_key = author.key.urlsafe()
+
         post.title = handler.request.get('title')
         post.content = handler.request.get('content')
         post.status = int(status)
-        # post.cover = handler.request.get('cover')
+        post.removed = 0
+        post.cover = handler.request.get('cover')
         # pics = handler.request.get('pics')
         post.put()
+
+        # ensure tags and create mappings
+        tag_str = handler.request.get('tags')
+        tag_list = [ t.strip() for t in tag_str.split(',') if t.strip() ]
+        tags = self._ensure_tags(tag_list, post.key.urlsafe())
+        
 
         handler.response.headers['Content-type'] = 'text/json'
         handler.response.write(json.dumps({
                     'status':0,
-                    'data': self._post_clean(post) 
+                    'data': self._post_clean(post, category=category, tags=tags, author=author) 
                     }))
 
 

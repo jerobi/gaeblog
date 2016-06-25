@@ -16,8 +16,10 @@
 {% block content %}
 
 <div class="gaeb-saved">
-    <span class="gaeb-sectitle">Saved Posts</span>
+    <span class="gaeb-sectitle">Posts</span>
     <div id="gaeb-posts"></div>
+    <a class="gaeb-post" href="#new" onclick="return GAEBAdmin.clearForm();">+</a>
+    
 </div>
 
 <div class="gaeb-edit">
@@ -25,21 +27,38 @@
     <!-- Get the essentials out of the way -->
 
     <div class="gaeb-editpanel">
-        <button id="gaeb-submit" onclick="GAEBAdmin.submitPost(1)">Draft</button>
-        <button id="gaeb-submit" onclick="GAEBAdmin.submitPost(2)">Publish</button>
 
-        <div>
-            <input type="title" id="gaeb-title" placeholder="Post Title"/>
+        <span id="gaeb-cover-preview" onclick="GAEBAdmin.coverToggle()"></span>
+
+        <div class="gaeb-title-block">
+            <input type="title" id="gaeb-title" class="gaeb-admin-input" placeholder="Post Title"/>
         </div>
 
-        <div>
+        <div class="gaeb-title-block">
             <input type="date" id="gaeb-published"/>
         </div>
+    </div>
+
+    <!-- Add a block for the cover image -->
+
+    <div id="gaeb-cover-block" class="gaeb-editpanel">
+        <button id="gaeb-cover-clear" onclick="GAEBAdmin.coverClear()">Clear</button> 
+        <span>
+            <iframe src="/photo/uploader" class="uploader" frameborder="0" height="20"></iframe>
+        </span>
     </div>
 
     <!-- Error text -->
     <div id="gaeb-error">
 
+    </div>
+
+    <!-- Category & Tags -->
+    <div class="gaeb-editpanel">
+        <input type="title" id="gaeb-category" class="gaeb-admin-input" placeholder="Post Category"/>
+    </div>
+    <div class="gaeb-editpanel">
+        <input type="text" id="gaeb-tags" class="gaeb-admin-input" placeholder="Comma Separated Tags"/>
     </div>
 
     <!-- Create the toolbar container -->
@@ -50,6 +69,7 @@
 
         <button class="gaeb-video" onclick="GAEBAdmin.imageToggle()">Image</button>
         <button class="gaeb-video" onclick="GAEBAdmin.videoToggle()">Video</button>
+
     </div>
 
     <div id="gaeb-image-block" class="gaeb-editpanel">
@@ -67,6 +87,11 @@
     <!-- Create the editor container -->
     <div id="gaeb-editor">
         
+    </div>
+
+    <div class="gaeb-savepanel">
+        <button id="gaeb-draft" onclick="GAEBAdmin.submitPost(1)">Draft</button>
+        <button id="gaeb-publish" onclick="GAEBAdmin.submitPost(2)">Publish</button>
     </div>
 
 </div>

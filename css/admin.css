@@ -34,16 +34,45 @@
     display: block;
 }
 
+.gaeb-title-block {
+    margin-bottom: 3px;
+}
+
+.gaeb-cover {
+    float: right;
+}
+
+#gaeb-cover-clear {
+    float: right;
+}
+
+#gaeb-cover-preview {
+    float:right;
+    display: block;
+    height: 56px;
+    width: 56px;
+    margin: 5px;
+    border: 1px solid #eee;
+}
+
+.gaeb-cover-preview {
+    display: block;
+    height: 56px;
+    width: 56px;
+    background-size: cover;
+}
+
 #gaeb-submit {
     float: right;
 }
 
-#gaeb-title {
-    width: 50%;
+.gaeb-admin-input {
+    width: 70%;
     border: 0px;
     font-size: 18px;
     padding: 5px;
 }
+
 
 #gaeb-error {
     background-color: #FF7E79;
@@ -82,4 +111,13 @@
 .gaeb-editpanel {
     padding: 5px;
     border-bottom: 1px solid #eee;
+}
+
+.gaeb-savepanel {
+    padding: 5px;
+    border-top: 1px solid #eee;
+    text-align: center;
+}
+.gaeb-savepanel button {
+    width: 60px;
 }
