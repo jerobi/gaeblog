@@ -18,7 +18,6 @@
 import os
 import logging
 import json
-import base64
 import datetime
 
 from google.appengine.api import images
@@ -91,7 +90,8 @@ class GAEB(object):
     def admin(self, handler):
         template = self.jinja.get_template('gaeblog/templates/admin.html')
         handler.response.write(template.render({
-                    'base': self.base
+                    'base': self.base,
+                    'user': self.user
                     }))
 
     def uploader(self, handler):
