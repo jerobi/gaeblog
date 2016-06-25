@@ -97,7 +97,7 @@ GAEBAdmin.clearForm = function() {
     $('input').val('');
     GAEBAdmin._editor.setHTML('');
     GAEBAdmin._editKey = "";
-    GAEBAdmin._coverUpload = null;
+    GAEBAdmin._coverPhoto = null;
     //GAEBAdmin._photos = [];
     GAEBAdmin.enableForm();
     GAEBAdmin.showCover();
