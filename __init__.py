@@ -27,6 +27,24 @@ from google.appengine.ext.webapp import blobstore_handlers
 
 import model
 
+
+from HTMLParser import HTMLParser
+
+class MLStripper(HTMLParser):
+    def __init__(self):
+        self.reset()
+        self.fed = []
+    def handle_data(self, d):
+        self.fed.append(d)
+    def get_data(self):
+        return ''.join(self.fed)
+
+def strip_tags(html):
+    s = MLStripper()
+    s.feed(html)
+    return s.get_data()
+
+
 class GAEB(object):
 
     # in order for GAEB to render templates in a style appropriate to the website
@@ -37,8 +55,15 @@ class GAEB(object):
         self.base = base
         self.jinja = jinja
         self.user = user
-        pass
-    
+        self.pub_format = '%Y-%m-%d'
+        self.preview_length = 140
+        
+    def set_pub_format(self, format):
+        self.pub_format = format
+
+    def set_preview_length(self, preview_length):
+        self.preview_length = preview_length
+
     # example of an admin class in GAE main.py to call admin
     # import os
     # import webapp2
@@ -125,6 +150,21 @@ class GAEB(object):
         except:
             handler.redirect('/photo/uploader?error=true')
     
+    def _preview(self, content):
+        stripped = strip_tags(content)
+
+        if len(stripped) < self.preview_length:
+            return stripped
+
+        splitted = stripped.split(' ')
+        content_len = 0
+        content_index = 0
+        while content_len < self.preview_length - 3:
+            content_len += len(splitted[content_index]) + 1
+            content_index += 1;
+            
+        return ' '.join(splitted[0:content_index]) + "..."
+
 
     def _post_clean(self, post, category=None, tags=None, author=None):
         post_key = post.key.urlsafe()
@@ -154,9 +194,10 @@ class GAEB(object):
                 },
             'tags'      : [ t.name for t in tags ],
             'content'   : post.content,
+            'preview'   : self._preview(post.content),
             'status'    : post.status,
             'pubts'     : (post.published - datetime.datetime(1970,1,1)).total_seconds(),
-            'published' : post.published.strftime('%Y-%m-%d')
+            'published' : post.published.strftime(self.pub_format)
             }
 
     def post(self, key):
@@ -200,6 +241,29 @@ class GAEB(object):
             posts = model.Post.query(model.Post.status==model.Status.published).order(-model.Post.published).fetch(100)
         
         return [ self._post_clean(p) for p in posts if p.removed==0 and p.status==model.Status.published]
+
+    def label(self, tag=None, category=None, author=None):
+
+        if tag:
+            obj = model.Tag.from_key(tag)
+            return {
+                'name':'tag',
+                'value':obj.name
+                }
+        elif category:
+            obj = model.Category.from_key(category)
+            return {
+                'name':'category', 
+                'value':obj.name
+                }
+        elif author:
+            obj = model.Author.from_key(author)
+            return {
+                'name':'author', 
+                'value':obj.name
+                }
+        else:
+            return None
 
     def tags(self):
         tags = model.Tag.query().fetch(100)
