@@ -169,13 +169,16 @@ class GAEB(object):
     def _post_clean(self, post, category=None, tags=None, author=None):
         post_key = post.key.urlsafe()
 
-        if category:
-            category_name = category.name
-        elif post.category_key:
+        if not category and post.category_key:
             category = model.Category.from_key(post.category_key)
-            category_name = category.name
+
+        if category:
+            category_dict = {
+                'name' : category.name,
+                'key'  : category.key.urlsafe()
+                }
         else:
-            category_name = ''
+            category_dict = None
 
         if not author:
             author = model.Author.from_key(post.author_key)
@@ -186,13 +189,16 @@ class GAEB(object):
         return {
             'title'     : post.title,
             'key'       : post_key,
-            'category'  : category_name,
+            'category'  : category_dict,
             'cover'     : post.cover,
             'author'    : {
                 'name' : author.name,
                 'key'  : author.key.urlsafe()
                 },
-            'tags'      : [ t.name for t in tags ],
+            'tags'      : [ {
+                    'key' : t.key.urlsafe(), 
+                    'name' : t.name 
+                    } for t in tags ],
             'content'   : post.content,
             'preview'   : self._preview(post.content),
             'status'    : post.status,

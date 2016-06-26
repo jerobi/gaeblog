@@ -65,6 +65,7 @@ GAEBAdmin.showCover = function() {
 GAEBAdmin.editForm = function(key) {
     for (var i=0; i < GAEBAdmin._posts.length; i++) {
         var post = GAEBAdmin._posts[i];
+        var tags = [];
         if (post.key == key) {
             console.warn(post);
             GAEBAdmin._editKey = key;
@@ -72,9 +73,13 @@ GAEBAdmin.editForm = function(key) {
             // vitals
             $('#gaeb-title').val(post.title);
             $('#gaeb-published').val(post.published);
-            // category & tags
-            $('#gaeb-category').val(post.category);
-            $('#gaeb-tags').val(post.tags.join(', '));
+            // category
+            $('#gaeb-category').val(post.category.name);
+            // tags
+            for (var j=0; j < post.tags.length; j++) {
+                tags.push(post.tags[j].name);
+            }
+            $('#gaeb-tags').val(tags.join(', '));
             // update the editor
             GAEBAdmin._editor.setHTML(post.content);
             GAEBAdmin.showCover();
