@@ -63,6 +63,7 @@ GAEBAdmin.showCover = function() {
 };
 
 GAEBAdmin.editForm = function(key) {
+    GAEBAdmin.clearForm();
     for (var i=0; i < GAEBAdmin._posts.length; i++) {
         var post = GAEBAdmin._posts[i];
         var tags = [];
@@ -73,13 +74,18 @@ GAEBAdmin.editForm = function(key) {
             // vitals
             $('#gaeb-title').val(post.title);
             $('#gaeb-published').val(post.published);
+            $('#gaeb-shortcode').val(post.shortcode);
             // category
-            $('#gaeb-category').val(post.category.name);
-            // tags
-            for (var j=0; j < post.tags.length; j++) {
-                tags.push(post.tags[j].name);
+            if (post.category) {
+                $('#gaeb-category').val(post.category.name);
             }
-            $('#gaeb-tags').val(tags.join(', '));
+            // tags
+            if (post.tags) {
+                for (var j=0; j < post.tags.length; j++) {
+                    tags.push(post.tags[j].name);
+                }
+                $('#gaeb-tags').val(tags.join(', '));
+            }
             // update the editor
             GAEBAdmin._editor.setHTML(post.content);
             GAEBAdmin.showCover();
@@ -122,7 +128,8 @@ GAEBAdmin.submitPost = function(status) {
     var title = $('#gaeb-title').val();
     var published = $('#gaeb-published').val()
     var content = GAEBAdmin._editor.getHTML();
-
+    var shortcode = $('#gaeb-shortcode').val();
+    
     // grab category and tags
     var category = $('#gaeb-category').val();
     var tags = $('#gaeb-tags').val();
@@ -145,12 +152,15 @@ GAEBAdmin.submitPost = function(status) {
         GAEBAdmin.error('Please add a published date');
         return GAEBAdmin.enableForm();
     }
+    
+    console.warn('shorty ' + shortcode);
 
     $.post('/admin/posts',
            {
                'key'        : GAEBAdmin._editKey,
                'cover'      : GAEBAdmin._coverPhoto,
                'title'      : title,
+               'shortcode'  : shortcode,
                'content'    : content,
                'status'     : status,
                'published'  : published,
@@ -284,6 +294,14 @@ $(document).ready(function() {
         }
     });
     //GAEBAdmin._editor.addFormat('embed', {'tag':'IFRAME'});
+
+    // post shortcode generator
+    $('#gaeb-title').keyup(function() {
+        var str = $('#gaeb-title').val();
+        str = str.replace(/[^\w\s]|_/g, "");
+        str = str.replace(/\s+/g, "-");
+        $('#gaeb-shortcode').val(str.toLowerCase());
+    });
 
     GAEBAdmin.clearForm();
     GAEBAdmin.getPosts();

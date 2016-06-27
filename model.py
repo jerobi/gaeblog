@@ -1,12 +1,22 @@
 from google.appengine.ext import ndb
 import time
+import re
 
+def shortcodify(name):
+    # strip out all charcters that are not ascii
+    nons = re.sub(r'[^\w\s]', "", name)
+    # replae all whitespace with dash
+    nonw = re.sub(r'\s', '-', nons)
+    # return the lowercase version of the string
+    return nonw.lower()
+    
 class Status(object):
     saved = 1
     published = 2
 
 class Post(ndb.Model):
     title        = ndb.StringProperty()
+    shortcode    = ndb.StringProperty()
     category_key = ndb.StringProperty()
     author_key   = ndb.StringProperty()
     content      = ndb.TextProperty()
@@ -26,6 +36,11 @@ class Post(ndb.Model):
         posts = Post.query(Post.category_key==catgeory_key).fetch(100)
         return posts
 
+    @classmethod
+    def from_shortcode(cls, shortcode):
+        post = Post.query(Post.shortcode==shortcode).get()
+        return post
+
 class Photo(ndb.Model):
     img_key = ndb.StringProperty()
     ref_key = ndb.StringProperty()
@@ -34,14 +49,20 @@ class Photo(ndb.Model):
     date    = ndb.DateTimeProperty(auto_now_add=True)
 
 class Category(ndb.Model):
-    name    = ndb.StringProperty()
-    removed = ndb.IntegerProperty()
-    date    = ndb.DateTimeProperty(auto_now_add=True)
+    name         = ndb.StringProperty()
+    shortcode    = ndb.StringProperty()
+    removed      = ndb.IntegerProperty()
+    date         = ndb.DateTimeProperty(auto_now_add=True)
 
     @classmethod
     def from_key(cls, key):
         post_key = ndb.Key(urlsafe=key)
         return post_key.get()
+
+    @classmethod
+    def from_shortcode(cls, shortcode):
+        cat = Category.query(Category.shortcode==shortcode).get()
+        return cat
 
     @classmethod
     def from_name_insert(cls, name):
@@ -49,15 +70,17 @@ class Category(ndb.Model):
         if not cat:
             cat = Category()
             cat.name = name
+            cat.shortcode = shortcodify(name)
             cat.removed = 0
             cat.put();
         return cat
 
 
 class Tag(ndb.Model):
-    name    = ndb.StringProperty()
-    removed = ndb.IntegerProperty()
-    date    = ndb.DateTimeProperty(auto_now_add=True)
+    name         = ndb.StringProperty()
+    shortcode    = ndb.StringProperty()
+    removed      = ndb.IntegerProperty()
+    date         = ndb.DateTimeProperty(auto_now_add=True)
 
     @classmethod
     def from_key(cls, key):
@@ -65,13 +88,19 @@ class Tag(ndb.Model):
         return post_key.get()
 
     @classmethod
+    def from_shortcode(cls, shortcode):
+        tag = Tag.query(Tag.shortcode==shortcode).get()
+        return tag
+
+    @classmethod
     def from_name_insert(cls, name):
         tag = Tag.query(Tag.name==name).get()
         if not tag:
             tag = Tag()
             tag.name = name
+            tag.shortcode = shortcodify(name)
             tag.removed = 0
-            tag.put();
+            tag.put()
         return tag
 
 class Map(ndb.Model):
@@ -120,17 +149,22 @@ class Map(ndb.Model):
 
 
 class Author(ndb.Model):
-    name       = ndb.StringProperty()
-    lookup_key = ndb.StringProperty()
-    photo_url  = ndb.StringProperty()
-    removed    = ndb.IntegerProperty()
-    date       = ndb.DateTimeProperty(auto_now_add=True)
+    name         = ndb.StringProperty()
+    shortcode    = ndb.StringProperty()
+    lookup_key   = ndb.StringProperty()
+    photo_url    = ndb.StringProperty()
+    removed      = ndb.IntegerProperty()
+    date         = ndb.DateTimeProperty(auto_now_add=True)
 
     @classmethod
     def from_key(cls, key):
         author_key = ndb.Key(urlsafe=key)
         return author_key.get()
 
+    @classmethod
+    def from_shortcode(cls, shortcode):
+        author = Author.query(Author.shortcode==shortcode).get()
+        return author
 
     @classmethod
     def from_user_insert(cls, user):
@@ -138,10 +172,12 @@ class Author(ndb.Model):
         if not author:
             author = Author()
             author.name = user['name']
+            author.shortcode = shortcodify(user['name'])
             author.lookup_key = user['lookup_key']
             author.photo_url = user.get('photo_url')
             author.removed = 0
-            author.put();
+            author.put()
+
         return author
 
 

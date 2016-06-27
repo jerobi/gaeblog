@@ -37,7 +37,7 @@ class MLStripper(HTMLParser):
     def handle_data(self, d):
         self.fed.append(d)
     def get_data(self):
-        return ''.join(self.fed)
+        return ' '.join(self.fed)
 
 def strip_tags(html):
     s = MLStripper()
@@ -51,10 +51,11 @@ class GAEB(object):
     # the caller should initialize with a jinja environment
     # and a base template that would contain css to style controls
     # and a user object that has a properly authorized user 
-    def __init__(self, jinja=None, base=None, user=None):
+    def __init__(self, jinja=None, base=None, user=None, secure=False):
         self.base = base
         self.jinja = jinja
         self.user = user
+        self.secure = secure
         self.pub_format = '%Y-%m-%d'
         self.preview_length = 140
         
@@ -116,7 +117,8 @@ class GAEB(object):
         template = self.jinja.get_template('gaeblog/templates/admin.html')
         handler.response.write(template.render({
                     'base': self.base,
-                    'user': self.user
+                    'user': self.user,
+                    'server': handler.request.server_name
                     }))
 
     def uploader(self, handler):
@@ -126,7 +128,7 @@ class GAEB(object):
         photo_key = handler.request.get('photo_key', None)
         
         if photo_key:
-            photo_url = images.get_serving_url(photo_key)
+            photo_url = images.get_serving_url(photo_key, secure_url=self.secure)
         else:
             photo_url = None
 
@@ -156,7 +158,7 @@ class GAEB(object):
         if len(stripped) < self.preview_length:
             return stripped
 
-        splitted = stripped.split(' ')
+        splitted = stripped.split()
         content_len = 0
         content_index = 0
         while content_len < self.preview_length - 3:
@@ -175,7 +177,8 @@ class GAEB(object):
         if category:
             category_dict = {
                 'name' : category.name,
-                'key'  : category.key.urlsafe()
+                'key'  : category.key.urlsafe(),
+                'shortcode' : category.shortcode
                 }
         else:
             category_dict = None
@@ -188,16 +191,19 @@ class GAEB(object):
 
         return {
             'title'     : post.title,
+            'shortcode' : post.shortcode,
             'key'       : post_key,
             'category'  : category_dict,
             'cover'     : post.cover,
             'author'    : {
                 'name' : author.name,
-                'key'  : author.key.urlsafe()
+                'key'  : author.key.urlsafe(),
+                'shortcode' : author.shortcode,
                 },
             'tags'      : [ {
                     'key' : t.key.urlsafe(), 
-                    'name' : t.name 
+                    'name' : t.name,
+                    'shortcode' : t.shortcode
                     } for t in tags ],
             'content'   : post.content,
             'preview'   : self._preview(post.content),
@@ -206,8 +212,8 @@ class GAEB(object):
             'published' : post.published.strftime(self.pub_format)
             }
 
-    def post(self, key):
-        post = model.Post.from_key(key)
+    def post(self, shortcode):
+        post = model.Post.from_shortcode(shortcode)
         return self._post_clean(post)
 
     def next(self, pubts):
@@ -238,11 +244,14 @@ class GAEB(object):
     def published(self, tag=None, category=None, author=None):
         # TODO : handle post query more efficiently 
         if tag:
-            posts = model.Map.map(tag, model.Map.Kind.tagPost, model.Post)
+            obj = model.Tag.from_shortcode(tag)
+            posts = model.Map.map(obj.key.urlsafe(), model.Map.Kind.tagPost, model.Post)
         elif category:
-            posts = model.Post.query(model.Post.status==model.Status.published, model.Post.category_key==category).order(-model.Post.published).fetch(100)
+            obj = model.Category.from_shortcode(category)
+            posts = model.Post.query(model.Post.status==model.Status.published, model.Post.category_key==obj.key.urlsafe()).order(-model.Post.published).fetch(100)
         elif author:
-            posts = model.Post.query(model.Post.status==model.Status.published, model.Post.author_key==author).order(-model.Post.published).fetch(100)
+            obj = model.Author.from_shortcode(author)
+            posts = model.Post.query(model.Post.status==model.Status.published, model.Post.author_key==obj.key.urlsafe()).order(-model.Post.published).fetch(100)
         else:
             posts = model.Post.query(model.Post.status==model.Status.published).order(-model.Post.published).fetch(100)
         
@@ -251,19 +260,19 @@ class GAEB(object):
     def label(self, tag=None, category=None, author=None):
 
         if tag:
-            obj = model.Tag.from_key(tag)
+            obj = model.Tag.from_shortcode(tag)
             return {
                 'name':'tag',
                 'value':obj.name
                 }
         elif category:
-            obj = model.Category.from_key(category)
+            obj = model.Category.from_shortcode(category)
             return {
                 'name':'category', 
                 'value':obj.name
                 }
         elif author:
-            obj = model.Author.from_key(author)
+            obj = model.Author.from_shortcode(author)
             return {
                 'name':'author', 
                 'value':obj.name
@@ -273,11 +282,19 @@ class GAEB(object):
 
     def tags(self):
         tags = model.Tag.query().fetch(100)
-        return [ (t.name, t.key.urlsafe()) for t in tags ]
+        return [ {
+                'name' : t.name, 
+                'key'  : t.key.urlsafe(),
+                'shortcode' : t.shortcode
+                } for t in tags ]
 
     def categories(self):
         categories = model.Category.query().fetch(100)
-        return [ (c.name, c.key.urlsafe()) for c in categories ]
+        return [ {
+                'name' : c.name,
+                'key'  : c.key.urlsafe(),
+                'shortcode' : c.shortcode
+                } for c in categories ]
 
     def posts_get(self, handler):
         posts = model.Post.query().order(-model.Post.published).fetch(100)
@@ -346,6 +363,7 @@ class GAEB(object):
         post.author_key = author.key.urlsafe()
 
         post.title = handler.request.get('title')
+        post.shortcode = handler.request.get('shortcode')
         post.content = handler.request.get('content')
         post.status = int(status)
         post.removed = 0
