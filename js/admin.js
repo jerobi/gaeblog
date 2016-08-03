@@ -112,6 +112,15 @@ GAEBAdmin.clearForm = function() {
     //GAEBAdmin._photos = [];
     GAEBAdmin.enableForm();
     GAEBAdmin.showCover();
+
+    var d = new Date();
+    var ds = d.getFullYear() + '-' +
+        ('0' + (d.getMonth()+1)).slice(-2) + '-' +
+        ('0' + d.getDate()).slice(-2); 
+    $('#gaeb-published').val(ds);
+
+    $('html, body').animate({scrollTop : 0},800);
+
 };
 
 GAEBAdmin.error = function(message) {
@@ -124,7 +133,7 @@ GAEBAdmin.errorClear = function() {
     $('#gaeb-error').fadeOut();
 };
 
-GAEBAdmin.submitPost = function(status) {
+GAEBAdmin.submitPost = function(status, preview) {
     var title = $('#gaeb-title').val();
     var published = $('#gaeb-published').val()
     var content = GAEBAdmin._editor.getHTML();
@@ -170,7 +179,16 @@ GAEBAdmin.submitPost = function(status) {
            function(response) {
                GAEBAdmin.addPost(response.data);
                GAEBAdmin.showPosts();
-               GAEBAdmin.clearForm();
+               if (preview) {
+                   // open post in separate window
+                   var url = $('#gaeb-prefix').text()+shortcode;
+                   var win = window.open(url, '_blank');
+                   win.focus();
+               }
+               else {
+                   // clear the formt o be ready for next post
+                   GAEBAdmin.clearForm();
+               }
            });
 
     return false;
@@ -194,9 +212,7 @@ GAEBAdmin.getPosts = function() {
           {},
           function(response) {
               GAEBAdmin.response = response;
-              console.warn(response.status);
               GAEBAdmin._posts = response.data;
-              console.warn(GAEBAdmin._posts);
               GAEBAdmin.showPosts();
           });
 };
@@ -277,10 +293,6 @@ $(document).ready(function() {
     GAEBAdmin._coverUpload = false;
     GAEBAdmin._coverPhoto = null;
     
-    // for some reason the value attribute does not seem to be working
-    var d = new Date();
-    var m = d.getMonth()+1;
-    $('#gaeb-published').val(d.getFullYear() + '-' + m + '-' + d.getDate());
 
     // hide image and video cells
     $('#gaeb-image-block').hide();

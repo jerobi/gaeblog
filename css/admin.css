@@ -1,9 +1,11 @@
 .gaeb-edit {
     border: 1px solid #eee;
     background-color: #fff;
-    max-width: 400px;
-    margin-right: auto;
+    width: 400px;
+    
     text-align: left;
+    vertical-align: top;
+    display:inline-block;
 }
 
 #ql-editor-1 {
@@ -18,23 +20,29 @@
 .gaeb-short-block {
     padding: 2px 5px 2px 5px;
 }
-.gaeb-short-server {
-    color: #666;
-    font-size: 12px;
-}
+
 #gaeb-shortcode {
     border: 0px;
     font-size: 12px;
     color: #666;
     font-weight: bold;
 }
+#gaeb-prefix {
+    color: #999;
+    font-size: 12px;
+}
 
 .gaeb-saved {
-    float: right;
     display: inline-block;
     width: 200px;
+    height: 686px;
+    overflow-x: hidden;
+    overflow-y: scroll;
     padding-left: 10px;
     text-align: left;
+    vertical-align: top;
+    background-color: #fff;
+    border: 1px solid #eee;
 }
 
 .gaeb-post {

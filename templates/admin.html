@@ -15,13 +15,6 @@
 
 {% block content %}
 
-<div class="gaeb-saved">
-    <span class="gaeb-sectitle">Posts</span>
-    <div id="gaeb-posts"></div>
-    <a class="gaeb-post" href="#new" onclick="return GAEBAdmin.clearForm();">+</a>
-    
-</div>
-
 <div class="gaeb-edit">
 
     <!-- Get the essentials out of the way -->
@@ -35,12 +28,14 @@
         </div>
 
         <div class="gaeb-short-block">
-            <span class="gaeb-short-server">{{server}}/</span><input type="text" id="gaeb-shortcode" placeholder="short-code"/>
+            <span id="gaeb-prefix">{{prefix}}</span><input type="text" id="gaeb-shortcode" placeholder="short-code"/>
         </div>
 
         <div class="gaeb-title-block">
             <input type="date" id="gaeb-published"/>
         </div>
+
+
     </div>
 
     <!-- Add a block for the cover image -->
@@ -94,10 +89,15 @@
     </div>
 
     <div class="gaeb-savepanel">
-        <button id="gaeb-draft" onclick="GAEBAdmin.submitPost(1)">Draft</button>
-        <button id="gaeb-publish" onclick="GAEBAdmin.submitPost(2)">Publish</button>
+        <button id="gaeb-draft" onclick="GAEBAdmin.submitPost(1, false)">Draft</button>
+        <button id="gaeb-publish" onclick="GAEBAdmin.submitPost(2, false)">Publish</button>
+        <button id="gaeb-preview" onclick="GAEBAdmin.submitPost(1, true)">Preview</button>
     </div>
 
+</div>
+<div class="gaeb-saved">
+    <a class="gaeb-post" href="#new" onclick="return GAEBAdmin.clearForm();">+</a>
+    <div id="gaeb-posts"></div>    
 </div>
 
 <div class="gaeb-clear">

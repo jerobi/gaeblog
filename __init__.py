@@ -113,12 +113,12 @@ class GAEB(object):
     #        ('/photo/uploader', AdminPhotoUploaderHandler),
     # ], debug=True)
 
-    def admin(self, handler):
+    def admin(self, handler, prefix):
         template = self.jinja.get_template('gaeblog/templates/admin.html')
         handler.response.write(template.render({
                     'base': self.base,
                     'user': self.user,
-                    'server': handler.request.server_name
+                    'prefix': prefix
                     }))
 
     def uploader(self, handler):
