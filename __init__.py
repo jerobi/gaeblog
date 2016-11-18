@@ -51,8 +51,7 @@ class GAEB(object):
     # the caller should initialize with a jinja environment
     # and a base template that would contain css to style controls
     # and a user object that has a properly authorized user 
-    def __init__(self, jinja=None, base=None, user=None, secure=False):
-        self.base = base
+    def __init__(self, jinja=None, user=None, secure=False):
         self.jinja = jinja
         self.user = user
         self.secure = secure
@@ -113,12 +112,23 @@ class GAEB(object):
     #        ('/photo/uploader', AdminPhotoUploaderHandler),
     # ], debug=True)
 
-    def admin(self, handler, prefix):
+    def admin(self, handler, base=None, prefix=None):
         template = self.jinja.get_template('gaeblog/templates/admin.html')
         handler.response.write(template.render({
-                    'base': self.base,
+                    'base': base,
                     'user': self.user,
                     'prefix': prefix
+                    }))
+
+    def feed(self, handler, title, description, source, hub='http://pubsubhubbub.appspot.com'):
+        template = self.jinja.get_template('gaeblog/templates/atom.xml')
+        handler.response.headers['Content-type'] = 'application/atom+xml'
+        handler.response.write(template.render({
+                    'title': title,
+                    'description': description,
+                    'hub': hub,
+                    'source': source,
+                    'posts': self.published()
                     }))
 
     def uploader(self, handler):
@@ -209,7 +219,8 @@ class GAEB(object):
             'preview'   : self._preview(post.content),
             'status'    : post.status,
             'pubts'     : (post.published - datetime.datetime(1970,1,1)).total_seconds(),
-            'published' : post.published.strftime(self.pub_format)
+            'published' : post.published.strftime(self.pub_format),
+            'ztime'     : post.published.strftime('%Y-%m-%dT%H:%M:%SZ')
             }
 
     def post(self, shortcode):

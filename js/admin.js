@@ -177,18 +177,13 @@ GAEBAdmin.submitPost = function(status, preview) {
                'tags'       : tags
            },
            function(response) {
-               GAEBAdmin.addPost(response.data);
-               GAEBAdmin.showPosts();
-               if (preview) {
-                   // open post in separate window
-                   var url = $('#gaeb-prefix').text()+shortcode;
-                   var win = window.open(url, '_blank');
-                   win.focus();
-               }
-               else {
-                   // clear the formt o be ready for next post
-                   GAEBAdmin.clearForm();
-               }
+               // on save let's just open the post
+               // I will add some logic on an admin page to return to post selected
+               var url = $('#gaeb-prefix').text()+shortcode;
+               window.location.href = url;
+               console.log(url);
+           }).fail(function() {
+               alert("Post unsuccessful please save work and try again");
            });
 
     return false;
