@@ -227,6 +227,10 @@ class GAEB(object):
         post = model.Post.from_shortcode(shortcode)
         return self._post_clean(post)
 
+    def admin_post(self, key):
+        post = model.Post.from_key(key)
+        return self._post_clean(post)
+
     def next(self, pubts):
         ref = datetime.datetime.fromtimestamp(pubts)
         posts = model.Post.query(ndb.AND(
@@ -381,6 +385,7 @@ class GAEB(object):
         post.cover = handler.request.get('cover')
         # pics = handler.request.get('pics')
         post.put()
+        
 
         # ensure tags and create mappings
         tag_str = handler.request.get('tags')
@@ -394,4 +399,5 @@ class GAEB(object):
                     'data': self._post_clean(post, category=category, tags=tags, author=author) 
                     }))
 
+        
 

@@ -72,18 +72,22 @@ GAEBAdmin.editForm = function(key) {
             GAEBAdmin._editKey = key;
             GAEBAdmin._coverPhoto = post.cover;
             // vitals
+            $('#gaeb-title').attr("placeholder", "");  // fix for placeholder not clearing
             $('#gaeb-title').val(post.title);
-            $('#gaeb-published').val(post.published);
+	    $('#gaeb-published').attr("placeholder", "");  // fix for placeholder not clearing
+	    $('#gaeb-shortcode').attr("placeholder", "");  // fix for placeholder not clearing
             $('#gaeb-shortcode').val(post.shortcode);
             // category
             if (post.category) {
+		$('#gaeb-category').attr("placeholder", "");  // fix for placeholder not clearing
                 $('#gaeb-category').val(post.category.name);
             }
             // tags
-            if (post.tags) {
+            if (post.tags && post.tags.length  > 0) {
                 for (var j=0; j < post.tags.length; j++) {
                     tags.push(post.tags[j].name);
                 }
+		$('#gaeb-tags').attr("placeholder", "");  // fix for placeholder not clearing
                 $('#gaeb-tags').val(tags.join(', '));
             }
             // update the editor
@@ -109,10 +113,14 @@ GAEBAdmin.clearForm = function() {
     GAEBAdmin._editor.setHTML('');
     GAEBAdmin._editKey = "";
     GAEBAdmin._coverPhoto = null;
-    //GAEBAdmin._photos = [];
     GAEBAdmin.enableForm();
     GAEBAdmin.showCover();
 
+    $('#gaeb-title').attr("placeholder", "Post Title");  // fix for placeholder not clearing
+    $('#gaeb-shortcode').attr("placeholder", "short-code");  // fix for placeholder not clearing
+    $('#gaeb-category').attr("placeholder", "Post Category");  // fix for placeholder not clearing
+    $('#gaeb-tags').attr("placeholder", "Comma Separated Tags");  // fix for placeholder not clearing
+    
     var d = new Date();
     var ds = d.getFullYear() + '-' +
         ('0' + (d.getMonth()+1)).slice(-2) + '-' +
@@ -120,7 +128,8 @@ GAEBAdmin.clearForm = function() {
     $('#gaeb-published').val(ds);
 
     $('html, body').animate({scrollTop : 0},800);
-
+    
+    return false;
 };
 
 GAEBAdmin.error = function(message) {
@@ -179,9 +188,11 @@ GAEBAdmin.submitPost = function(status, preview) {
            function(response) {
                // on save let's just open the post
                // I will add some logic on an admin page to return to post selected
-               var url = $('#gaeb-prefix').text()+shortcode;
-               window.location.href = url;
-               console.log(url);
+               //var url = $('#gaeb-prefix').text()+shortcode;
+	       console.log(response)
+	       var url = $('#gaeb-prefix').text() + 'admin/post/' + response.data.key
+	       window.location.href = url;
+
            }).fail(function() {
                alert("Post unsuccessful please save work and try again");
            });
@@ -202,6 +213,15 @@ GAEBAdmin.addPost = function(post) {
     GAEBAdmin._posts.push(post);
 }
 
+GAEBAdmin.selectPost = function() {
+    if (window.location.hash) {
+	var id = window.location.hash.substring(1);
+	console.warn('Select post : ' + id);
+	GAEBAdmin.editForm(id);
+	window.location.replace('#');
+    }
+};
+
 GAEBAdmin.getPosts = function() {
     $.get('/admin/posts', 
           {},
@@ -209,6 +229,7 @@ GAEBAdmin.getPosts = function() {
               GAEBAdmin.response = response;
               GAEBAdmin._posts = response.data;
               GAEBAdmin.showPosts();
+	      GAEBAdmin.selectPost();
           });
 };
 
