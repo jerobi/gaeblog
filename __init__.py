@@ -20,11 +20,9 @@ import logging
 import json
 import datetime
 
-from google.appengine.api import images
-from google.appengine.ext import ndb
-from google.appengine.ext import blobstore
-from google.appengine.ext.webapp import blobstore_handlers
 
+# data storage - may want to abstract this out as well
+from google.appengine.ext import ndb
 import model
 
 
@@ -51,8 +49,8 @@ class GAEB(object):
     # the caller should initialize with a jinja environment
     # and a base template that would contain css to style controls
     # and a user object that has a properly authorized user 
-    def __init__(self, jinja=None, user=None, secure=False):
-        self.jinja = jinja
+    def __init__(self, handler, user=None, secure=False):
+        self.handler = handler
         self.user = user
         self.secure = secure
         self.pub_format = '%Y-%m-%d'
@@ -112,48 +110,40 @@ class GAEB(object):
     #        ('/photo/uploader', AdminPhotoUploaderHandler),
     # ], debug=True)
 
-    def admin(self, handler, base=None, prefix=None):
-        template = self.jinja.get_template('gaeblog/templates/admin.html')
-        handler.response.write(template.render({
-                    'base': base,
-                    'user': self.user,
-                    'prefix': prefix
-                    }))
+    def admin(self, base=None, prefix=None):
+        assert(self.user)
+        return self.handler.render('gaeblog/templates/admin.html', {
+                'base': base,
+                'user': self.user,
+                'prefix': prefix
+                })
 
-    def feed(self, handler, title, description, source, hub='http://pubsubhubbub.appspot.com'):
-        template = self.jinja.get_template('gaeblog/templates/atom.xml')
-        handler.response.headers['Content-type'] = 'application/atom+xml'
-        handler.response.write(template.render({
-                    'title': title,
-                    'description': description,
-                    'hub': hub,
-                    'source': source,
-                    'posts': self.published()
-                    }))
+    def feed(self, title, description, source, hub='http://pubsubhubbub.appspot.com'):
+                
+        return self.handler.render('gaeblog/templates/atom.xml', {
+                'title': title,
+                'description': description,
+                'hub': hub,
+                'source': source,
+                'posts': self.published()
+                }, content_type = 'application/atom+xml')
+                                   
+                                   
 
-    def uploader(self, handler):
+    def uploader(self, url):
         # grab a url for uploading
-        upload_url = blobstore.create_upload_url('/photo/upload')
-
-        photo_key = handler.request.get('photo_key', None)
         
-        if photo_key:
-            photo_url = images.get_serving_url(photo_key, secure_url=self.secure)
-        else:
-            photo_url = None
+        upload_url = self.handler.upload_url(url, self.secure)
+        (photo_key, photo_url) = self.handler.upload(self.secure)
 
-        error = handler.request.get('error', '')
+        error = self.handler.post_param('error', '')
 
-        # this will be a generic uploader that should be used within an iframe
-        # the response to this will be piped to PhotoUploadHandler
-        # which will redirect to the responder 
-        template = self.jinja.get_template('gaeblog/templates/uploader.html')
-        handler.response.write(template.render({
-                    'upload_url' : upload_url,
-                    'photo_key'  : photo_key,
-                    'photo_url'  : photo_url,
-                    'error'      : error
-                    }))
+        return self.handler.render('gaeblog/templates/uploader.html', {
+                'upload_url' : upload_url,
+                'photo_key'  : photo_key,
+                'photo_url'  : photo_url,
+                'error'      : error
+                })
 
     def uploaded(self, handler):
         try:
@@ -311,14 +301,13 @@ class GAEB(object):
                 'shortcode' : c.shortcode
                 } for c in categories ]
 
-    def posts_get(self, handler):
+    def posts_get(self):
         posts = model.Post.query().order(-model.Post.published).fetch(100)
 
-        handler.response.headers['Content-type'] = 'text/json'
-        handler.response.write(json.dumps({
-                    'status':0,
-                    'data': [ self._post_clean(p) for p in posts ]
-                    }))
+        return self.handler.json({
+                'status':0,
+                'data': [ self._post_clean(p) for p in posts ]
+                })
 
 
     def _ensure_category(self, category):
@@ -342,14 +331,15 @@ class GAEB(object):
         return tags
 
     def _ensure_author(self):
+        assert(self.user)
         author = model.Author.from_user_insert(self.user)
         return author
 
-    def posts_submit(self, handler):
-        
-        post_key = handler.request.get('key')
-        published = handler.request.get('published')
-        status = handler.request.get('status',1)
+    def posts_submit(self):
+
+        post_key = self.handler.post_param('key', None)
+        published = self.handler.post_param('published', None)
+        status = self.handler.post_param('status', 1)
 
         if post_key:
             post = model.Post().from_key(post_key)
@@ -366,7 +356,7 @@ class GAEB(object):
         post.published = pub_time
 
         # ensure category and save to post
-        cat_str = handler.request.get('category')
+        cat_str = self.handler.post_param('category', None)
         if cat_str:
             category = self._ensure_category(cat_str)
             post.category_key = category.key.urlsafe()
@@ -377,27 +367,25 @@ class GAEB(object):
         author = self._ensure_author()
         post.author_key = author.key.urlsafe()
 
-        post.title = handler.request.get('title')
-        post.shortcode = handler.request.get('shortcode')
-        post.content = handler.request.get('content')
+        post.title = self.handler.post_param('title', None)
+        post.shortcode = self.handler.post_param('shortcode', None)
+        post.content = self.handler.post_param('content', None)
         post.status = int(status)
         post.removed = 0
-        post.cover = handler.request.get('cover')
+        post.cover = self.handler.post_param('cover', None)
         # pics = handler.request.get('pics')
         post.put()
         
 
         # ensure tags and create mappings
-        tag_str = handler.request.get('tags')
+        tag_str = self.handler.post_param('tags', None)
         tag_list = [ t.strip() for t in tag_str.split(',') if t.strip() ]
         tags = self._ensure_tags(tag_list, post.key.urlsafe())
         
-
-        handler.response.headers['Content-type'] = 'text/json'
-        handler.response.write(json.dumps({
+        return self.handler.json({
                     'status':0,
                     'data': self._post_clean(post, category=category, tags=tags, author=author) 
-                    }))
+                    })
 
         
 
