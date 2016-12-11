@@ -45,10 +45,21 @@ def strip_tags(html):
 
 class GAEB(object):
 
-    # in order for GAEB to render templates in a style appropriate to the website
-    # the caller should initialize with a jinja environment
-    # and a base template that would contain css to style controls
-    # and a user object that has a properly authorized user 
+    # GAEB supports two flavors
+    # 1. StandardHandler - Standard app engine request handler
+    #
+    #    from gaeblog.gaeb_standard import StandardHandler
+    #    import gaeblog
+    #
+    #    see gaeblog.gaeb_standard for configuration
+    #
+    # 2. FlaskHandler - Handler that conforms to a Flask implementation
+    #
+    #    from gaeblog.gaeb_flask import FlaskHandler
+    #    import gaeblog
+    # 
+    #    see gaeblog.gaeb_flask for configuration
+    #
     def __init__(self, handler, user=None, secure=False):
         self.handler = handler
         self.user = user
@@ -61,54 +72,6 @@ class GAEB(object):
 
     def set_preview_length(self, preview_length):
         self.preview_length = preview_length
-
-    # example of an admin class in GAE main.py to call admin
-    # import os
-    # import webapp2
-    # import jinja2
-    # import gaeblog
-
-    # JINJA_ENVIRONMENT = jinja2.Environment(
-    #     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
-    #     extensions=['jinja2.ext.autoescape'],
-    #     autoescape=True)
- 
-    #        
-    # class AdminPostsHandler(MainHandler):
-    #
-    #     def get(self):
-    #         gaeb = gaeblog.GAEB(JINJA_ENVIRONMENT, 'templates/base.html', self._user)
-    #         gaeb.posts_get(self)
-    #
-    #     def post(self):
-    #         gaeb = gaeblog.GAEB(JINJA_ENVIRONMENT, 'templates/base.html', self._user)
-    #         gaeb.posts_submit(self)
-    #
-    # class AdminHandler(MainHandler):
-    #     def get(self):
-    #         gaeb = gaeblog.GAEB(JINJA_ENVIRONMENT, 'templates/base.html', self._user)
-    #         gaeb.admin(self)
-    #
-    # class AdminPhotoUploaderHandler(MainHandler):
-    #     def get(self):
-    #         gaeb = gaeblog.GAEB(JINJA_ENVIRONMENT, 'templates/base.html', self._user)
-    #         gaeb.uploader(self)
-    #
-    # class AdminPhotoUploadHandler(blobstore_handlers.BlobstoreUploadHandler):
-    #
-    #    def post(self):
-    #        gaeb = gaeblog.GAEB(JINJA_ENVIRONMENT, 'templates/base.html', self._user)
-    #        gaeb.uploaded(self)
-    #
-    #
-    # app = webapp2.WSGIApplication([
-    #        ('/', MainHandler),
-    #        ('/([^/]+)', PostHandler),
-    #        ('/admin', AdminHandler),
-    #        ('/admin/posts', AdminPostsHandler),
-    #        ('/photo/upload', AdminPhotoUploadHandler),
-    #        ('/photo/uploader', AdminPhotoUploaderHandler),
-    # ], debug=True)
 
     def admin(self, base=None, prefix=None):
         assert(self.user)
@@ -144,13 +107,6 @@ class GAEB(object):
                 'photo_url'  : photo_url,
                 'error'      : error
                 })
-
-    def uploaded(self, handler):
-        try:
-            upload = handler.get_uploads()[0]
-            handler.redirect('/photo/uploader?photo_key=%s' % upload.key())
-        except:
-            handler.redirect('/photo/uploader?error=true')
     
     def _preview(self, content):
         stripped = strip_tags(content)
