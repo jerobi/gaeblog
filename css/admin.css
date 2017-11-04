@@ -1,6 +1,4 @@
 .gaeb-edit {
-    border: 1px solid #eee;
-    background-color: #fff;
     width: 400px;
     
     text-align: left;
@@ -13,7 +11,7 @@
 }
 
 #gaeb-toolbar {
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #aaa;
     padding: 5px;
 }
 
@@ -35,14 +33,14 @@
 .gaeb-saved {
     display: inline-block;
     width: 200px;
-    height: 686px;
+    height: 700px;
     overflow-x: hidden;
     overflow-y: scroll;
     padding-left: 10px;
     text-align: left;
     vertical-align: top;
     background-color: #fff;
-    border: 1px solid #eee;
+    border: 1px solid #aaa;
 }
 
 .gaeb-post {
@@ -80,7 +78,7 @@
     height: 56px;
     width: 56px;
     margin: 5px;
-    border: 1px solid #eee;
+    border: 1px solid #aaa;
 }
 
 .gaeb-cover-preview {
@@ -138,12 +136,18 @@
 
 .gaeb-editpanel {
     padding: 5px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #aaa;
+}
+
+.gaeb-composer {
+    min-height: 700px;
+    border: 1px solid #aaa;
+    background-color: #fff;
 }
 
 .gaeb-savepanel {
     padding: 5px;
-    border-top: 1px solid #eee;
+
     text-align: center;
 }
 .gaeb-savepanel button {

@@ -12,81 +12,84 @@
 <script type="text/javascript" src="/gaeblog/js/quill/quill.js"></script>
 
 
+
 {% endblock %}
 
 {% block content %}
 
 <div class="gaeb-edit">
 
-    <!-- Get the essentials out of the way -->
-
-    <div class="gaeb-editpanel">
-
-        <span id="gaeb-cover-preview" onclick="GAEBAdmin.coverToggle()"></span>
-
-        <div class="gaeb-title-block">
-            <input type="title" id="gaeb-title" class="gaeb-admin-input" placeholder="Post Title"/>
-        </div>
-
-        <div class="gaeb-short-block">
-            <span id="gaeb-prefix">{{prefix}}</span><input type="text" id="gaeb-shortcode" placeholder="short-code"/>
-        </div>
-
-        <div class="gaeb-title-block">
-            <input type="date" id="gaeb-published"/>
-        </div>
-
-
-    </div>
-
-    <!-- Add a block for the cover image -->
-
-    <div id="gaeb-cover-block" class="gaeb-editpanel">
-        <button id="gaeb-cover-clear" onclick="GAEBAdmin.coverClear()">Clear</button> 
-        <span>
-            <iframe src="/photo/uploader" class="uploader" frameborder="0" height="20"></iframe>
-        </span>
-    </div>
-
-    <!-- Error text -->
-    <div id="gaeb-error">
-
-    </div>
-
-    <!-- Category & Tags -->
-    <div class="gaeb-editpanel">
-        <input type="title" id="gaeb-category" class="gaeb-admin-input" placeholder="Post Category"/>
-    </div>
-    <div class="gaeb-editpanel">
-        <input type="text" id="gaeb-tags" class="gaeb-admin-input" placeholder="Comma Separated Tags"/>
-    </div>
-
-    <!-- Create the toolbar container -->
-    <div id="gaeb-toolbar">
-        <button class="ql-bold">Bold</button>
-        <button class="ql-italic">Italic</button>
-        <button class="ql-link">Link</button>
-
-        <button class="gaeb-video" onclick="GAEBAdmin.imageToggle()">Image</button>
-        <button class="gaeb-video" onclick="GAEBAdmin.videoToggle()">Video</button>
-
-    </div>
-
-    <div id="gaeb-image-block" class="gaeb-editpanel">
-        <span id="uploader">
-            <iframe src="/photo/uploader" class="uploader" frameborder="0" height="20"></iframe>
-        </span>
-    </div>
-    
-    <div id="gaeb-video-block" class="gaeb-editpanel">
-        <input type="text" placeholder="Youtube URL" id="youtube" name="youtube"/>
-        <button class="gaeb-add" onclick="GAEBAdmin.addYoutube()">Add</button>
-    </div>
-
-    
-    <!-- Create the editor container -->
-    <div id="gaeb-editor">
+    <div class="gaeb-composer">
+        <!-- Get the essentials out of the way -->
         
+        <div class="gaeb-editpanel">
+            
+            <span id="gaeb-cover-preview" onclick="GAEBAdmin.coverToggle()"></span>
+            
+            <div class="gaeb-title-block">
+                <input type="title" id="gaeb-title" class="gaeb-admin-input" placeholder="Post Title"/>
+            </div>
+            
+            <div class="gaeb-short-block">
+                <span id="gaeb-prefix">{{prefix}}</span><input type="text" id="gaeb-shortcode" placeholder="short-code"/>
+            </div>
+
+            <div class="gaeb-title-block">
+                <input type="date" id="gaeb-published"/>
+            </div>
+
+            
+        </div>
+
+        <!-- Add a block for the cover image -->
+        
+        <div id="gaeb-cover-block" class="gaeb-editpanel">
+            <button id="gaeb-cover-clear" onclick="GAEBAdmin.coverClear()">Clear</button> 
+            <span>
+                <iframe src="/photo/uploader" class="uploader" frameborder="0" height="20"></iframe>
+            </span>
+        </div>
+
+        <!-- Error text -->
+        <div id="gaeb-error">
+            
+        </div>
+
+        <!-- Category & Tags -->
+        <div class="gaeb-editpanel">
+            <input type="title" id="gaeb-category" class="gaeb-admin-input" placeholder="Post Category"/>
+        </div>
+        <div class="gaeb-editpanel">
+            <input type="text" id="gaeb-tags" class="gaeb-admin-input" placeholder="Comma Separated Tags"/>
+        </div>
+
+        <!-- Create the toolbar container -->
+        <div id="gaeb-toolbar">
+            <button class="ql-bold">Bold</button>
+            <button class="ql-italic">Italic</button>
+            <button class="ql-link">Link</button>
+            
+            <button class="gaeb-video" onclick="GAEBAdmin.imageToggle()">Image</button>
+            <button class="gaeb-video" onclick="GAEBAdmin.videoToggle()">Video</button>
+            
+        </div>
+
+        <div id="gaeb-image-block" class="gaeb-editpanel">
+            <span id="uploader">
+                <iframe src="/photo/uploader" class="uploader" frameborder="0" height="20"></iframe>
+            </span>
+        </div>
+        
+        <div id="gaeb-video-block" class="gaeb-editpanel">
+            <input type="text" placeholder="Youtube URL" id="youtube" name="youtube"/>
+            <button class="gaeb-add" onclick="GAEBAdmin.addYoutube()">Add</button>
+        </div>
+
+    
+        <!-- Create the editor container -->
+        <div id="gaeb-editor">
+            
+        </div>
     </div>
 
     <div class="gaeb-savepanel">
